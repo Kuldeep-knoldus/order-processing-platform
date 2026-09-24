@@ -3,6 +3,11 @@ image:
   tag: dev
   pullPolicy: IfNotPresent
 replicaCount: 1
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 70
 resources:
   requests: { cpu: 100m, memory: 256Mi }
   limits: { cpu: 500m, memory: 512Mi }

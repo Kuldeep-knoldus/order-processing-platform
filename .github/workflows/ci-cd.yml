@@ -23,6 +23,9 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: '21', cache: maven }
       - run: mvn -B verify
+      - name: Lint Helm chart
+        uses: azure/setup-helm@v4
+      - run: helm lint helm/order-platform --values helm/order-platform/values-dev.yaml
       - uses: gitleaks/gitleaks-action@v2
         env: { GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}' }
 
@@ -80,4 +83,9 @@ jobs:
           cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
       - uses: azure/setup-helm@v4
       - run: helm upgrade --install order-platform helm/order-platform --set image.registry="$REGISTRY" --set image.tag="$IMAGE_TAG" --wait --timeout 5m
-      - run: kubectl rollout status deployment/order-api --timeout=120s
+      - name: Validate all service rollouts
+        run: |
+          kubectl rollout status deployment/order-api --timeout=120s
+          kubectl rollout status deployment/order-processor --timeout=120s
+          kubectl rollout status deployment/notification-service --timeout=120s
+          kubectl get pods,services -l app.kubernetes.io/part-of=order-platform

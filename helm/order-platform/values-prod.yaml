@@ -1,0 +1,11 @@
+image:
+  pullPolicy: IfNotPresent
+replicaCount: 2
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+resources:
+  requests: { cpu: 200m, memory: 256Mi }
+  limits: { cpu: 1000m, memory: 768Mi }

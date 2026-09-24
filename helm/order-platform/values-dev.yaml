@@ -1,0 +1,9 @@
+image:
+  tag: dev
+  pullPolicy: IfNotPresent
+replicaCount: 1
+autoscaling:
+  enabled: false
+resources:
+  requests: { cpu: 50m, memory: 128Mi }
+  limits: { cpu: 250m, memory: 384Mi }

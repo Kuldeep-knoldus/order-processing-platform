@@ -28,6 +28,17 @@ curl -X POST http://localhost:8080/api/orders -H "Content-Type: application/json
 curl http://localhost:8080/actuator/health
 ```
 
+With Docker installed, the complete local stack can be started together:
+
+```powershell
+docker compose up --build -d
+docker compose ps
+docker compose logs -f order-api
+docker compose down
+```
+
+The services are available on ports `8080`, `8081`, and `8082`. Docker Compose is intended for local development; AKS remains the cloud deployment target.
+
 ## Build containers
 
 ```powershell
@@ -49,11 +60,27 @@ helm upgrade --install order-platform helm/order-platform `
   --set image.tag=<git-sha> --wait
 ```
 
+Use the cost-optimized development profile or the highly available production profile when appropriate:
+
+```powershell
+helm upgrade --install order-platform helm/order-platform `
+  --values helm/order-platform/values-dev.yaml `
+  --set image.registry=<acr-login-server> --set image.tag=<git-sha> --wait
+
+helm upgrade --install order-platform helm/order-platform `
+  --values helm/order-platform/values-prod.yaml `
+  --set image.registry=<acr-login-server> --set image.tag=<git-sha> --wait
+```
+
+The production profile runs two replicas and enables CPU-based Horizontal Pod Autoscaling. The development profile keeps one small replica to control cost.
+
 The API is the only public `LoadBalancer`; processor and notification remain internal ClusterIP services. All pods run as non-root, expose actuator readiness/liveness probes, and use resource requests and limits.
 
 ## CI/CD setup
 
 The workflow in `.github/workflows/ci-cd.yml` runs Maven verification and Gitleaks on pull requests. A push builds all three images, scans them with Trivy, and pushes the same `${{ github.sha }}` tag to ACR. A push to `main` deploys that exact tag with Helm and waits for the API rollout.
+
+Pull requests also run `.github/workflows/pr-verification.yml`, which performs Maven verification, Helm linting, and Trivy filesystem checks without requiring Azure credentials. This keeps cloud credentials out of the PR quality gate.
 
 Configure these exact repository secrets under **Settings > Secrets and variables > Actions**:
 

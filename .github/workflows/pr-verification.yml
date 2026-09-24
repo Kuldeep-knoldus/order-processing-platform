@@ -1,0 +1,31 @@
+name: PR Verification
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21', cache: maven }
+      - name: Build and test
+        run: mvn -B verify
+      - name: Lint Helm chart
+        uses: azure/setup-helm@v4
+      - run: helm lint helm/order-platform --values helm/order-platform/values-dev.yaml
+      - name: Scan repository filesystem
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          exit-code: '1'
