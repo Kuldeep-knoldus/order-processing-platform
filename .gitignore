@@ -1,4 +1,6 @@
 target/
+spring-boot-rest-api/.gradle/
+spring-boot-rest-api/build/
 .idea/
 .vscode/
 *.iml
