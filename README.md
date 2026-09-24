@@ -55,7 +55,24 @@ The API is the only public `LoadBalancer`; processor and notification remain int
 
 The workflow in `.github/workflows/ci-cd.yml` runs Maven verification and Gitleaks on pull requests. A push builds all three images, scans them with Trivy, and pushes the same `${{ github.sha }}` tag to ACR. A push to `main` deploys that exact tag with Helm and waits for the API rollout.
 
-Configure these exact repository secrets under **Settings > Secrets and variables > Actions**: `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID`, `ACR_LOGIN_SERVER`, `AKS_RESOURCE_GROUP`, and `AKS_CLUSTER_NAME`. `AZURE_CLIENT_ID` is the Application (client) ID, `AZURE_TENANT_ID` is the Directory (tenant) ID, and `AZURE_SUBSCRIPTION_ID` is the Azure subscription ID. Do not use the display name or object ID for `AZURE_CLIENT_ID`.
+Configure these exact repository secrets under **Settings > Secrets and variables > Actions**:
+
+| Secret | Value |
+| --- | --- |
+| `AZURE_CLIENT_ID` | Azure App Registration Application (client) ID |
+| `AZURE_TENANT_ID` | Azure Entra Directory (tenant) ID |
+| `AZURE_SUBSCRIPTION_ID` | Azure subscription ID from `terraform.tfvars` |
+| `ACR_LOGIN_SERVER` | `orderplatformdevacr.azurecr.io` |
+| `AKS_RESOURCE_GROUP` | `rg-order-platform-dev` |
+| `AKS_CLUSTER_NAME` | `orderplatformdev-aks` |
+
+Do not use the display name or object ID for `AZURE_CLIENT_ID`. The workflow generates `REGISTRY` from `ACR_LOGIN_SERVER` and `IMAGE_TAG` from `github.sha`; `GITHUB_TOKEN` is provided automatically by GitHub.
+
+For local OpenTofu, the subscription can optionally be supplied as an environment variable:
+
+```powershell
+$env:TF_VAR_subscription_id = "<your-azure-subscription-id>"
+```
 
 Create an Azure federated credential for the service principal with issuer `https://token.actions.githubusercontent.com` and audience `api://AzureADTokenExchange`. Add a subject matching the workflow ref, for example `repo:Kuldeep-knoldus/order-processing-platform:ref:refs/heads/main`; add another credential for the feature branch if you want the image-push job to run there. Use an Azure federated identity for GitHub OIDC; never store a client secret in GitHub. The workflow now fails early with the missing secret names instead of the generic Azure login error.
 
