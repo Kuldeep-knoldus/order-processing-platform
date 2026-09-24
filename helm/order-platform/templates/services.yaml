@@ -1,0 +1,15 @@
+{{- range $service := list .Values.services.orderApi .Values.services.orderProcessor .Values.services.notification }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $service.name }}
+spec:
+  type: {{ if eq $service.name "order-api" }}LoadBalancer{{ else }}ClusterIP{{ end }}
+  selector:
+    app.kubernetes.io/name: {{ $service.name }}
+  ports:
+    - name: http
+      port: {{ $service.port }}
+      targetPort: http
+---
+{{- end }}

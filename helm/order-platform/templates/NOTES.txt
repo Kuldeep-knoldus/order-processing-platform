@@ -1,0 +1,5 @@
+Order API endpoint:
+  kubectl get service order-api
+
+Smoke test:
+  curl -X POST http://<external-ip>:8080/api/orders -H "Content-Type: application/json" -d '{"customerEmail":"buyer@example.com","product":"keyboard","quantity":1}'

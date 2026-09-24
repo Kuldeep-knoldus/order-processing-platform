@@ -1,0 +1,12 @@
+image:
+  registry: orderplatformdevacr.azurecr.io
+  tag: dev
+  pullPolicy: IfNotPresent
+replicaCount: 1
+resources:
+  requests: { cpu: 100m, memory: 256Mi }
+  limits: { cpu: 500m, memory: 512Mi }
+services:
+  orderApi: { name: order-api, port: 8080, containerPort: 8080 }
+  orderProcessor: { name: order-processor, port: 8081, containerPort: 8081 }
+  notification: { name: notification-service, port: 8082, containerPort: 8082 }

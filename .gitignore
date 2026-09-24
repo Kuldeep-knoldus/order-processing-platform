@@ -1,0 +1,9 @@
+target/
+.idea/
+.vscode/
+*.iml
+infra/.terraform/
+infra/*.tfstate
+infra/*.tfstate.*
+infra/terraform.tfvars
+!.terraform.lock.hcl
