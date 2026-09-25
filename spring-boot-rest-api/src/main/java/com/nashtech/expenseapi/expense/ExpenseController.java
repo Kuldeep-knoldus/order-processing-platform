@@ -15,12 +15,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 
 import java.math.BigDecimal;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/expenses")
+@Validated
 public class ExpenseController {
+    private static final Set<String> SORTABLE_FIELDS = Set.of("expenseDate", "description", "category", "amount", "ownerEmail");
     private final ExpenseService service;
 
     public ExpenseController(ExpenseService service) {
@@ -37,12 +43,15 @@ public class ExpenseController {
     public Page<ExpenseResponse> findAll(@RequestParam(required = false) String category,
                                          @RequestParam(required = false) String description,
                                          @RequestParam(required = false) String ownerEmail,
-                                         @RequestParam(defaultValue = "0") int page,
-                                         @RequestParam(defaultValue = "20") int size,
+                                         @RequestParam(defaultValue = "0") @Min(0) int page,
+                                         @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
                                          @RequestParam(defaultValue = "expenseDate") String sortBy,
                                          @RequestParam(defaultValue = "DESC") Sort.Direction direction) {
+        if (!SORTABLE_FIELDS.contains(sortBy)) {
+            throw new IllegalArgumentException("Unsupported sort field: " + sortBy);
+        }
         return service.findAll(category, description, ownerEmail,
-                PageRequest.of(page, Math.min(size, 100), Sort.by(direction, sortBy)));
+                PageRequest.of(page, size, Sort.by(direction, sortBy)));
     }
 
     @GetMapping("/{id}")

@@ -22,13 +22,20 @@ public class ExpenseService {
 
     @Transactional(readOnly = true)
     public Page<ExpenseResponse> findAll(String category, String description, String ownerEmail, Pageable pageable) {
+        String normalizedCategory = normalize(category);
+        String normalizedDescription = normalize(description);
+        String normalizedOwnerEmail = normalize(ownerEmail);
         Page<Expense> expenses;
-        if (category != null && description != null) {
-            expenses = repository.findByCategoryIgnoreCaseAndDescriptionContainingIgnoreCase(category, description, pageable);
-        } else if (ownerEmail != null) {
-            expenses = repository.findByOwnerEmailIgnoreCase(ownerEmail, pageable);
-        } else {
+        if (normalizedCategory == null && normalizedDescription == null && normalizedOwnerEmail == null) {
             expenses = repository.findAll(pageable);
+        } else if (normalizedCategory != null && normalizedDescription != null && normalizedOwnerEmail == null) {
+            expenses = repository.findByCategoryIgnoreCaseAndDescriptionContainingIgnoreCase(
+                    normalizedCategory, normalizedDescription, pageable);
+        } else if (normalizedCategory == null && normalizedDescription == null) {
+            expenses = repository.findByOwnerEmailIgnoreCase(normalizedOwnerEmail, pageable);
+        } else {
+            expenses = repository.findByFilters(normalizedCategory, normalizedDescription,
+                    normalizedOwnerEmail, pageable);
         }
         return expenses.map(ExpenseResponse::from);
     }
@@ -59,5 +66,9 @@ public class ExpenseService {
 
     private Expense toEntity(ExpenseRequest request) {
         return new Expense(request.description(), request.category(), request.amount(), request.expenseDate(), request.ownerEmail());
+    }
+
+    private String normalize(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }
